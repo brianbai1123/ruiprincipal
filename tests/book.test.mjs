@@ -30,7 +30,17 @@ test("every station has both layers and the five-step reread", () => {
     assert.ok(chapter.essence.length >= 4, chapter.slug);
     assert.ok(chapter.bookRef.length > 0, chapter.slug);
     assert.equal(chapter.plain.checks.length, 3, chapter.slug);
-    assert.ok(chapter.plain.logic.length >= 4, chapter.slug);
+    assert.equal(chapter.plain.logic, undefined, chapter.slug);
+    const { chain, breaks } = chapter.plain;
+    assert.ok(chain.length >= 7, chapter.slug);
+    assert.equal(chain[0].via, undefined, chapter.slug);
+    for (const link of chain.slice(1)) {
+      assert.ok(link.via, `${chapter.slug} ${link.claim}`);
+      assert.ok(!link.claim.startsWith(link.via), `${chapter.slug} repeats via: ${link.claim}`);
+    }
+    for (const link of chain) assert.ok(link.detail.length >= 20, `${chapter.slug} ${link.claim}`);
+    assert.ok(chain.at(-1).claim.startsWith("结果"), chapter.slug);
+    assert.ok(breaks.length >= 2, chapter.slug);
     assert.ok(chapter.plain.scenes.length >= 2, chapter.slug);
     assert.equal((chapter.plain.core.match(/。/g) || []).length, 1, chapter.slug);
     for (const block of chapter.essence) {
@@ -78,7 +88,7 @@ test("navigation groups cover every station once", () => {
 
 test("the page shows the five-step method in order", () => {
   const source = readFileSync(new URL("../src/components/chapter-view.tsx", import.meta.url), "utf8");
-  const labels = ["先理解", "找出核心观点", "重建逻辑", "用简单语言表达", "检查你是否能快速理解"];
+  const labels = ["先理解", "找出核心观点", "逻辑因果链", "用简单语言表达", "检查你是否能快速理解"];
   let cursor = 0;
   for (const label of labels) {
     const at = source.indexOf(label, cursor);

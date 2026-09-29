@@ -27,6 +27,12 @@ export type EssenceBlock = {
 
 export type StripKind = "life" | "work";
 
+export type ChainLink = {
+  via?: string;
+  claim: string;
+  detail: string;
+};
+
 export type Chapter = {
   slug: string;
   group: "读之前" | "原则从哪来" | "生活原则" | "工作原则" | "写成自己的";
@@ -42,7 +48,8 @@ export type Chapter = {
   plain: {
     understand: string;
     core: string;
-    logic: string[];
+    chain: ChainLink[];
+    breaks: string[];
     scenes: { title: string; body: string }[];
     checks: { question: string; answer: string }[];
   };
