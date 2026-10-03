@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFileSync } from "node:fs";
+import vm from "node:vm";
 import { chapters, chapterGroups, GROUP_ORDER, LIFE_NAMES, WORK_NAMES } from "../src/content/book.ts";
 import {
   resolveTheme,
@@ -122,6 +123,67 @@ test("theme resolution defaults to paper when no candidate is valid", () => {
 test("theme state uses only the Principles site key", () => {
   assert.equal(THEME_KEY, "ruiprincipal:theme");
   assert.doesNotMatch(THEME_BOOTSTRAP_SCRIPT, /principles:theme/);
+});
+
+function runThemeBootstrap(
+  script,
+  {
+    search = "",
+    stored = null,
+    storageThrows = false,
+  } = {},
+) {
+  const writes = [];
+  const root = {
+    dataset: {},
+    removeAttribute(name) {
+      if (name === "data-theme") delete this.dataset.theme;
+    },
+    setAttribute(name, value) {
+      if (name === "data-theme") this.dataset.theme = value;
+    },
+  };
+  const localStorage = {
+    getItem() {
+      if (storageThrows) throw new Error("blocked");
+      return stored;
+    },
+    setItem(key, value) {
+      if (storageThrows) throw new Error("blocked");
+      writes.push([key, value]);
+    },
+  };
+
+  vm.runInNewContext(script, {
+    URLSearchParams,
+    document: { documentElement: root },
+    localStorage,
+    location: { search },
+  });
+
+  return { theme: root.dataset.theme ?? "paper", writes };
+}
+
+test("theme bootstrap executes query validation, persistence, and blocked-storage fallback", () => {
+  assert.deepEqual(runThemeBootstrap(THEME_BOOTSTRAP_SCRIPT, {
+    search: "?theme=night",
+  }), {
+    theme: "night",
+    writes: [["ruiprincipal:theme", "night"]],
+  });
+  assert.deepEqual(runThemeBootstrap(THEME_BOOTSTRAP_SCRIPT, {
+    search: "?theme=invalid",
+  }), {
+    theme: "paper",
+    writes: [],
+  });
+  assert.deepEqual(runThemeBootstrap(THEME_BOOTSTRAP_SCRIPT, {
+    search: "?theme=celadon",
+    storageThrows: true,
+  }), {
+    theme: "celadon",
+    writes: [],
+  });
 });
 
 test("layout runs the theme bootstrap inline before the body hydrates", () => {
