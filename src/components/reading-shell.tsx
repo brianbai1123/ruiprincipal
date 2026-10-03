@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { chapterGroups, chapterHref, chapters } from "@/content/book";
+import { ThemeSwitcher } from "@/components/theme-switcher";
 
 const groups = chapterGroups();
 
@@ -25,10 +26,11 @@ export function ReadingShell({
         <div className="px-5 py-6">
           <Link href="/" className="block">
             <p className="font-serif text-2xl text-pine">原则</p>
-            <p className="mt-1 text-sm leading-relaxed text-muted">
+            <p className="mt-1 font-kai text-sm leading-relaxed text-muted">
               把瑞·达利欧的《原则》按原书的路讲清楚
             </p>
           </Link>
+          <ThemeSwitcher />
         </div>
         <details className="border-t border-line px-5 py-3 lg:hidden">
           <summary className="cursor-pointer text-sm font-semibold">
